@@ -1,8 +1,13 @@
 {
-  "name": "code-interpret",
-  "displayName": "code-interpret",
+  "name": "var-named-helper",
+  "displayName": "var-named-helper",
   "description": "",
   "version": "0.0.1",
+  "publisher": "chyun1006",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chyun1006/code-interpret.git"
+  },
   "engines": {
     "vscode": "^1.71.0"
   },
@@ -10,8 +15,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:code-interpret.helloWorld",
-    "onCommand:code-interpret.spellhelper"
+    "onCommand:var-named-helper.helloWorld",
+    "onCommand:var-named-helper.spellhelper"
   ],
   "enabledApiProposals": [
     "contribEditorContentMenu"
@@ -20,14 +25,14 @@
   "contributes": {
     "commands": [
       {
-        "command": "code-interpret.spellhelper",
+        "command": "var-named-helper.spellhelper",
         "title": "翻译"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "code-interpret.spellhelper",
+          "command": "var-named-helper.spellhelper",
           "group": "1_modification@1"
         }
       ]

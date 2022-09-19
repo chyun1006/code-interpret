@@ -10,13 +10,13 @@ import api from "./config";
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerTextEditorCommand(
-    "code-interpret.spellhelper",
+    "var-named-helper.spellhelper",
     (textEditor, edit) => {
       const document: vscode.TextDocument = textEditor.document;
       const { start, end } = textEditor.selection;
       const range = new vscode.Range(start, end);
       const selectContent = document.getText(range);
-      if (selectContent) {
+      if (!selectContent) {
         vscode.window.showInformationMessage(`请划取要翻译的词`);
         return;
       }
