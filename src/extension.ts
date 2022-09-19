@@ -1,51 +1,60 @@
-import * as vscode from 'vscode'
-import { getSign, joinParams } from './utils'
-import api from './config'
-const http = require('http')
+import * as vscode from "vscode";
+import { getSign, joinParams } from "./utils";
+import api from "./config";
+const http = require("http");
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerTextEditorCommand(
-    'var-named-helper.spellhelper',
-    (textEditor, edit) => {
-      const selectContent = _getSelectContent(textEditor)
-      if (selectContent) {
-        vscode.window.showInformationMessage(`请划取要翻译的词`)
-        return
+    "var-named-helper.spellhelper",
+    async (textEditor, edit) => {
+      const document: vscode.TextDocument = textEditor.document;
+      const { start, end } = textEditor.selection;
+      const range = new vscode.Range(start, end);
+
+      const selectContent = document.getText(range);
+      if (!selectContent) {
+        vscode.window.showInformationMessage(`请划取要翻译的词`);
+        return;
       }
 
-      const randomNum = +new Date()
-      const key = joinParams(selectContent, randomNum)
-      const sign = getSign(key)
-      const url = api[0].api(selectContent, randomNum, sign)
+      const res: any = await _getTranslate(selectContent);
+      const items = res["trans_result"].map((item: any) => ({
+        label: item.dst,
+      }));
+      const result: any = await vscode.window.showQuickPick(items);
 
-      http.get(url, (res: any) => {
-        if (res.statusCode !== 200) {
-          console.log(`statusCode ${res.statusCode}`)
-          return
-        }
-
-        let data = ''
-        res.on('data', (chunk: any) => (data += chunk))
-        res.on('end', () => {
-          const parsedData = JSON.parse(data)
-          console.log('data', parsedData)
-
-          const translateRes = parsedData.trans_result[0].dst
-          vscode.window.showInformationMessage(`翻译结果：${translateRes}`)
-        })
-      })
+      // 此处有坑：不要使用edit上的replace方法，会报错: Edit is only valid while callback runs
+      // 解决办法： https://github.com/stkb/Rewrap/issues/324
+      textEditor.edit((editbuilder) => {
+        editbuilder.replace(range, result.label);
+      });
     }
-  )
-  context.subscriptions.push(disposable)
+  );
+  context.subscriptions.push(disposable);
 }
 
-function _getSelectContent(textEditor: vscode.TextEditor): string {
-  const document: vscode.TextDocument = textEditor.document
-  const { start, end } = textEditor.selection
-  const range = new vscode.Range(start, end)
-  return document.getText(range)
+function _getTranslate(selectContent: string): Promise<any> {
+  const randomNum = +new Date();
+  const key = joinParams(selectContent, randomNum);
+  const sign = getSign(key);
+  const url = api[0].api(selectContent, randomNum, sign);
+  return new Promise((resolve, reject) => {
+    http.get(url, (res: any) => {
+      if (res.statusCode !== 200) {
+        console.log(`statusCode ${res.statusCode}`);
+        return;
+      }
+
+      let data = "";
+      res.on("data", (chunk: any) => (data += chunk));
+      res.on("end", () => {
+        const parsedData = JSON.parse(data);
+        resolve(parsedData);
+      });
+    });
+  });
 }
 
 // this method is called when your extension is deactivated
