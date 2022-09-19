@@ -18,31 +18,36 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`请划取要翻译的词`);
         return;
       }
- 
+
       try {
-        const res: any = await _getTranslate(selectContent);
-        const options = res["trans_result"].map((item: any) => ({
-          label: item.dst,
-        }));
-        const result: any = await vscode.window.showQuickPick(options);
+        const pattern = new RegExp("[\u4E00-\u9FA5]+");
+        const isChinese = pattern.test(selectContent);
+        const target = isChinese ? "en" : "zh";
+        const res: any = await _getTranslate(selectContent, target);
+        const options = res["trans_result"].map((item: any) => item.dst);
+
+        const items = Array.from(new Set(_generateOptions(options)));
+        const result: any = await vscode.window.showQuickPick(items);
         // 此处有坑：不要使用edit上的replace方法，会报错: Edit is only valid while callback runs
         // 解决办法： https://github.com/stkb/Rewrap/issues/324
-        textEditor.edit((editbuilder) => {
-          editbuilder.replace(range, result.label);
-        });
+        if (result) {
+          textEditor.edit((editbuilder) => {
+            editbuilder.replace(range, result);
+          });
+        }
       } catch (error: any) {
-        vscode.window.showInformationMessage(error);
+        vscode.window.showInformationMessage(error.message);
       }
     }
   );
   context.subscriptions.push(disposable);
 }
 
-function _getTranslate(selectContent: string) {
+function _getTranslate(selectContent: string, target: string = "en") {
   const randomNum = +new Date();
   const key = joinParams(selectContent, randomNum);
   const sign = getSign(key);
-  const url = api[0].api(selectContent, randomNum, sign);
+  const url = api[0].api(selectContent, randomNum, sign, target);
   return new Promise((resolve, reject) => {
     try {
       http.get(url, (res: any) => {
@@ -62,6 +67,42 @@ function _getTranslate(selectContent: string) {
       reject(null);
     }
   });
+}
+
+function _generateOptions(options: Array<any>): Array<string> {
+  let res: Array<string> = [];
+  options.forEach((item) => {
+    const words = item.split(" ");
+    if (words.length === 1) {
+      const word = words[0];
+      res.push(word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase()); // 首字母大写
+      res.push(word.toLowerCase()); // 全小写
+    } else {
+      res.push(..._getHumpOptions(words));
+    }
+  });
+
+  console.log("----options===", res);
+  return res;
+}
+
+function _firstLetterUpperCase(words: string) {
+  return words.slice(0, 1).toUpperCase() + words.slice(1).toLowerCase();
+}
+
+function _getHumpOptions(words: Array<string>) {
+  let bigHump = ""; // 大驼峰
+  let smallHump = ""; // 小驼峰
+  words.forEach((item: string, index: number) => {
+    if (index === 0) {
+      smallHump += item.toLowerCase();
+    } else {
+      smallHump += _firstLetterUpperCase(item);
+    }
+    bigHump += _firstLetterUpperCase(item);
+  });
+
+  return [bigHump, smallHump];
 }
 
 // this method is called when your extension is deactivated
