@@ -1,3 +1,7 @@
-## var-named-helper README
-代码变量命名插件
+## var-named-helper 代码变量命名帮助工具
+### 功能：
+ - 添加快捷键 ctrl+t快速翻译
+ - 在快速选择中显示翻译结果
+ - 点击待选词后可自动替换
+
 **Enjoy!**

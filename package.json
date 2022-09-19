@@ -1,8 +1,8 @@
 {
   "name": "var-named-helper",
   "displayName": "var-named-helper",
-  "description": "",
-  "version": "0.0.1",
+  "description": "代码变量命名帮助工具",
+  "version": "0.0.3",
   "publisher": "chyun1006",
   "repository": {
     "type": "git",
@@ -17,9 +17,6 @@
   "activationEvents": [
     "onCommand:var-named-helper.helloWorld",
     "onCommand:var-named-helper.spellhelper"
-  ],
-  "enabledApiProposals": [
-    "contribEditorContentMenu"
   ],
   "main": "./out/extension.js",
   "contributes": {
