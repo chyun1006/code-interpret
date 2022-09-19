@@ -18,42 +18,49 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`请划取要翻译的词`);
         return;
       }
-
-      const res: any = await _getTranslate(selectContent);
-      const items = res["trans_result"].map((item: any) => ({
-        label: item.dst,
-      }));
-      const result: any = await vscode.window.showQuickPick(items);
-
-      // 此处有坑：不要使用edit上的replace方法，会报错: Edit is only valid while callback runs
-      // 解决办法： https://github.com/stkb/Rewrap/issues/324
-      textEditor.edit((editbuilder) => {
-        editbuilder.replace(range, result.label);
-      });
+ 
+      try {
+        const res: any = await _getTranslate(selectContent);
+        const options = res["trans_result"].map((item: any) => ({
+          label: item.dst,
+        }));
+        const result: any = await vscode.window.showQuickPick(options);
+        // 此处有坑：不要使用edit上的replace方法，会报错: Edit is only valid while callback runs
+        // 解决办法： https://github.com/stkb/Rewrap/issues/324
+        textEditor.edit((editbuilder) => {
+          editbuilder.replace(range, result.label);
+        });
+      } catch (error: any) {
+        vscode.window.showInformationMessage(error);
+      }
     }
   );
   context.subscriptions.push(disposable);
 }
 
-function _getTranslate(selectContent: string): Promise<any> {
+function _getTranslate(selectContent: string) {
   const randomNum = +new Date();
   const key = joinParams(selectContent, randomNum);
   const sign = getSign(key);
   const url = api[0].api(selectContent, randomNum, sign);
   return new Promise((resolve, reject) => {
-    http.get(url, (res: any) => {
-      if (res.statusCode !== 200) {
-        console.log(`statusCode ${res.statusCode}`);
-        return;
-      }
+    try {
+      http.get(url, (res: any) => {
+        if (res.statusCode !== 200) {
+          console.log(`statusCode ${res.statusCode}`);
+          return;
+        }
 
-      let data = "";
-      res.on("data", (chunk: any) => (data += chunk));
-      res.on("end", () => {
-        const parsedData = JSON.parse(data);
-        resolve(parsedData);
+        let data = "";
+        res.on("data", (chunk: any) => (data += chunk));
+        res.on("end", () => {
+          const parsedData = JSON.parse(data);
+          resolve(parsedData);
+        });
       });
-    });
+    } catch (error) {
+      reject(null);
+    }
   });
 }
 

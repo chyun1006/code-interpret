@@ -23,6 +23,13 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "keybindings": [
+      {
+        "command": "var-named-helper.spellhelper",
+        "key": "ctrl+t",
+        "when": "editorTextFocus"
+      }
+    ],
     "commands": [
       {
         "command": "var-named-helper.spellhelper",
