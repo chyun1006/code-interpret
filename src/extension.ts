@@ -45,11 +45,7 @@ function _getSelectContent(textEditor: vscode.TextEditor): string {
   const document: vscode.TextDocument = textEditor.document
   const { start, end } = textEditor.selection
   const range = new vscode.Range(start, end)
-  const selectContent = document.getText(range)
-  if (!selectContent) {
-    return ''
-  }
-  return selectContent
+  return document.getText(range)
 }
 
 // this method is called when your extension is deactivated
