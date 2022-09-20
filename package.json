@@ -1,8 +1,8 @@
 {
-  "name": "translate-helper",
-  "displayName": "Translate helper",
+  "name": "code-translate-helper",
+  "displayName": "Code translate helper",
   "description": "一款在敲代码过程中会用到的翻译工具",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "publisher": "chyun1006",
   "repository": {
     "type": "git",
