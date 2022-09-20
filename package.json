@@ -1,8 +1,8 @@
 {
-  "name": "var-named-helper",
-  "displayName": "var-named-helper",
-  "description": "代码变量命名帮助工具",
-  "version": "0.0.3",
+  "name": "translate-helper",
+  "displayName": "Translate helper",
+  "description": "一款在敲代码过程中会用到的翻译工具",
+  "version": "0.0.4",
   "publisher": "chyun1006",
   "repository": {
     "type": "git",
@@ -15,28 +15,27 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:var-named-helper.helloWorld",
-    "onCommand:var-named-helper.spellhelper"
+    "onCommand:translate-helper"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "keybindings": [
       {
-        "command": "var-named-helper.spellhelper",
+        "command": "translate-helper",
         "key": "ctrl+t",
         "when": "editorTextFocus"
       }
     ],
     "commands": [
       {
-        "command": "var-named-helper.spellhelper",
+        "command": "translate-helper",
         "title": "翻译"
       }
     ],
     "menus": {
       "editor/context": [
         {
-          "command": "var-named-helper.spellhelper",
+          "command": "translate-helper",
           "group": "1_modification@1"
         }
       ]

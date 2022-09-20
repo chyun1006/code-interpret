@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
-import { getSign, joinParams } from "./utils";
+import {
+  getSign,
+  joinParams,
+  getHumpNamedVar,
+  firstLetterUpperCase,
+  isChinese,
+} from "./utils";
 import api from "./config";
 const http = require("http");
 
@@ -7,7 +13,7 @@ const http = require("http");
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
   let disposable = vscode.commands.registerTextEditorCommand(
-    "var-named-helper.spellhelper",
+    "translate-helper",
     async (textEditor, edit) => {
       const document: vscode.TextDocument = textEditor.document;
       const { start, end } = textEditor.selection;
@@ -20,9 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const pattern = new RegExp("[\u4E00-\u9FA5]+");
-        const isChinese = pattern.test(selectContent);
-        const target = isChinese ? "en" : "zh";
+        const target = isChinese(selectContent) ? "en" : "zh";
         const res: any = await _getTranslate(selectContent, target);
         const options = res["trans_result"].map((item: any) => item.dst);
 
@@ -43,16 +47,23 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
 }
 
-function _getTranslate(selectContent: string, target: string = "en") {
+/**
+ * 接口请求
+ * @param source 翻译内容
+ * @param target 目标语言
+ * @returns
+ */
+function _getTranslate(source: string, target: string = "en") {
   const randomNum = +new Date();
-  const key = joinParams(selectContent, randomNum);
+  const key = joinParams(source, randomNum);
   const sign = getSign(key);
-  const url = api[0].api(selectContent, randomNum, sign, target);
+  const baiduApi = api[0];
+  const url = baiduApi.api(source, randomNum, sign, target);
   return new Promise((resolve, reject) => {
     try {
       http.get(url, (res: any) => {
         if (res.statusCode !== 200) {
-          console.log(`statusCode ${res.statusCode}`);
+          vscode.window.showInformationMessage(`请求错误：${res.statusCode}`);
           return;
         }
 
@@ -75,34 +86,14 @@ function _generateOptions(options: Array<any>): Array<string> {
     const words = item.split(" ");
     if (words.length === 1) {
       const word = words[0];
-      res.push(word.slice(0, 1).toUpperCase() + word.slice(1).toLowerCase()); // 首字母大写
+      res.push(firstLetterUpperCase(word)); // 首字母大写
       res.push(word.toLowerCase()); // 全小写
     } else {
-      res.push(..._getHumpOptions(words));
+      res.push(...getHumpNamedVar(words)); // 驼峰
     }
   });
 
-  console.log("----options===", res);
   return res;
-}
-
-function _firstLetterUpperCase(words: string) {
-  return words.slice(0, 1).toUpperCase() + words.slice(1).toLowerCase();
-}
-
-function _getHumpOptions(words: Array<string>) {
-  let bigHump = ""; // 大驼峰
-  let smallHump = ""; // 小驼峰
-  words.forEach((item: string, index: number) => {
-    if (index === 0) {
-      smallHump += item.toLowerCase();
-    } else {
-      smallHump += _firstLetterUpperCase(item);
-    }
-    bigHump += _firstLetterUpperCase(item);
-  });
-
-  return [bigHump, smallHump];
 }
 
 // this method is called when your extension is deactivated
